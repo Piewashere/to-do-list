@@ -1,12 +1,12 @@
 {
   "name": "to-do-list",
   "version": "1.0.0",
-  "description": "school project",
   "main": "server.js",
   "scripts": {
-    "test": "test",
+    "test": "playwright test",
     "start": "node server.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "description": ""
 }
