@@ -1,7 +1,14 @@
+/* Tailwind v4 entry */
 @import "tailwindcss";
 
+/* Sources to scan */
 @source "./public/**/*.html";
 @source "./public/**/*.js";
 
-
-
+input,
+select {
+  @apply bg-yellow-50;
+}
+button {
+  @apply cursor-pointer bg-blue-200 hover:bg-blue-300 text-orange-700 rounded-lg border-2 border-blue-700;
+}

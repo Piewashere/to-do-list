@@ -1,38 +1,25 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
   <head>
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>James-Zebedee</title>
-
-    <link rel="icon" href="/favicon.ico" sizes="any">
-    <link rel="stylesheet" href="/style.css">
+    <meta charset="utf-8" />
+    <title>ToDo List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="favicon.ico" />
+    <link rel="stylesheet" href="/style.css" />
     <script src="/logic.js" defer></script>
-
   </head>
-
-  <body>
-    <header class="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-slate-100 border-b border-slate-300 shadow-sm">
-      <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold font-sans text-slate-800 tracking-tight">
-          James' To-Dos
-        </h1>
+  <body class="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
+    <!-- Header -->
+    <header class="flex-none border-b bg-white">
+      <div class="px-4 py-3">
+        <h1 class="text-xl font-semibold">ToDo List</h1>
+        <p class="text-sm text-gray-600">Build your own UI using the JSON API.</p>
       </div>
-
-      <nav class="flex items-center gap-4 text-sm font-medium font-sans text-slate-700">
-        <a href="#" class="hover:text-slate-950 transition">Home</a>
-        <a href="#" class="hover:text-slate-950 transition">Projects</a>
-        <a href="#" class="hover:text-slate-950 transition">About</a>
-        <button class="px-3 py-1.5 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition">
-          Log In
-        </button>
-      </nav>
     </header>
-    <main class="border-2 border-green-700 p-50 m-4 bg-green-200/50">
-      <h1>Totally gonna have a check list here soon</h1>
-    </main>
+    <div class="flex-1 flex overflow-hidden min-h-0">
+      <!-- Left column: fixed width; scrolls independently -->
+      <nav class="w-80 shrink-0 border-r bg-green-100 p-4 overflow-y-auto"></nav>
+      <main class="bg-orange-100 w-full min-h-20"></main>
+    </div>
   </body>
-
 </html>
