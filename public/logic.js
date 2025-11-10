@@ -1,55 +1,60 @@
 (function () {
   "use strict";
 
-  var btn = document.getElementById("loadBtn");
-  var out = document.getElementById("output");
+  document.addEventListener('DOMContentLoaded', () => {
+    const newText = document.getElementById('newText');
+    const newDone = document.getElementById('newDone');
+    const btnAdd = document.getElementById('btnAdd');
+    const output = document.getElementById('output');
 
-  function show(obj) {
-    try {
-      out.textContent = JSON.stringify(obj, null, 2);
-    } catch (e) {
-      out.textContent = String(obj);
+    function show(obj) {
+      output.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
     }
-  }
 
-  function xhrJSON(method, url, cb) {
-    var xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    xhr.responseType = "text";
-    xhr.setRequestHeader("Accept", "application/json");
-    xhr.timeout = 10000;
-
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState !== 4) return;
-      if (xhr.status >= 200 && xhr.status < 300) {
-        var text = xhr.responseText || "";
-        try {
-          var json = text ? JSON.parse(text) : null;
-          cb(null, json);
-        } catch (err) {
-          cb(new Error("Invalid JSON: " + err.message));
-        }
-      } else {
-        cb(new Error("HTTP " + xhr.status + " " + xhr.statusText));
+    async function fetchList() {
+      try {
+        const res = await fetch('/api/list');
+        if (!res.ok) throw new Error(`list failed: ${res.status}`);
+        const data = await res.json();
+        show(data);
+      } catch (err) {
+        show({ error: err.message });
       }
-    };
+    }
 
-    xhr.ontimeout = function () {
-      cb(new Error("Request timed out"));
-    };
-    xhr.onerror = function () {
-      cb(new Error("Network error"));
-    };
+    btnAdd.addEventListener('click', async () => {
+      const text = (newText.value || '').trim();
+      const done = newDone.checked ? 'true' : 'false';
+      if (!text) {
+        show({ error: 'Please enter text for the new todo' });
+        return;
+      }
 
-    xhr.send(null);
-  }
+      btnAdd.disabled = true;
+      show({ status: 'adding...' });
 
-  btn.addEventListener("click", function () {
-    xhrJSON("GET", "/api/random-verse", function (err, json) {
-      if (err) return show({ error: String(err) });
-      show(json);
+      try {
+        const q = `?text=${encodeURIComponent(text)}&done=${encodeURIComponent(done)}`;
+        const res = await fetch('/api/item/add' + q);
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`add failed ${res.status}: ${txt}`);
+        }
+        const data = await res.json();
+        show(data);
+        // clear inputs
+        newText.value = '';
+        newDone.checked = false;
+        // refresh list view
+        await fetchList();
+      } catch (err) {
+        show({ error: err.message });
+      } finally {
+        btnAdd.disabled = false;
+      }
     });
-  });
 
-  show({ ready: true, hint: "Click the button to load a random verse." });
+    // initial load
+    fetchList();
+  });
 })();
