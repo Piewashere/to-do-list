@@ -90,95 +90,57 @@
 
   // --------------- optional rendering helpers ---------------
   function renderListPayload(payload) {
-    if (!payload || payload.ok === false) return show(payload);
-    var items = payload.items;
-    if (!Array.isArray(items)) return show(payload);
-
-    function pick(it, keys, fallback) {
-      for (var i = 0; i < keys.length; i++) {
-        if (keys[i] in it && it[keys[i]] != null) return it[keys[i]];
-      }
-      return fallback;
-    }
-    function fmtDate(v) {
-      if (!v && v !== 0) return "";
-      var d = new Date(v);
-      if (!isNaN(d.getTime())) return d.toLocaleString();
-      return String(v);
-    }
-
-    var lines = items.map(function (it) {
-      var id = pick(it, ["id", "itemId"], "?");
-      var name = pick(it, ["text", "name", "title"], "");
-      var done = !!pick(it, ["done", "isDone", "completed"], false);
-      var created = pick(it, ["createdAt", "created_at", "created", "createdAtMs"], "");
-      var updated = pick(it, ["updatedAt", "updated_at", "updated", "modifiedAt"], "");
-      var createdStr = fmtDate(created);
-      var updatedStr = fmtDate(updated);
-      var mark = done ? "[x]" : "[ ]";
-      var parts = [];
-      parts.push(mark + " #" + id + "  " + name);
-      var meta = [];
-      if (createdStr) meta.push("created: " + createdStr);
-      if (updatedStr) meta.push("updated: " + updatedStr);
-      if (meta.length) parts.push("    " + meta.join(" | "));
-      return parts.join("\n");
-    });
-
-    out.textContent = "Items: " + items.length + "\n\n" + lines.join("\n\n");
+    return show(payload);
+    // if (!payload || !payload.ok || !Array.isArray(payload.items)) return show(payload);
+    // // Compact readable list
+    // var lines = payload.items.map(function (it) {
+    //   var mark = it.done ? "[x]" : "[ ]";
+    //   return mark + " #" + it.id + "  " + it.text;
+    // });
+    // out.textContent = "Items: " + payload.items.length + "\n" + lines.join("\n");
   }
 
   // --------------- wire buttons ---------------
-  function on(id, type, fn) {
-    var node = el(id);
-    if (!node) {
-      // Useful for debugging in the console but harmless in production.
-      console.warn("Missing element for wiring:", id);
-      return;
-    }
-    node.addEventListener(type, fn);
-  }
-
-  on("btnHealth", "click", function () {
+  el("btnHealth").addEventListener("click", function () {
     var data = xhrJSON("GET", "/api/health");
     show(data);
   });
 
-  on("btnStats", "click", function () {
+  el("btnStats").addEventListener("click", function () {
     var data = xhrJSON("GET", "/api/stats");
     show(data);
   });
 
-  on("btnListAll", "click", function () {
+  el("btnListAll").addEventListener("click", function () {
     var data = xhrJSON("GET", "/api/list");
     renderListPayload(data);
   });
 
-  on("btnListOpen", "click", function () {
+  el("btnListOpen").addEventListener("click", function () {
     var data = xhrJSON("GET", "/api/list" + toQuery({ done: "false" }));
     renderListPayload(data);
   });
 
-  on("btnListDone", "click", function () {
+  el("btnListDone").addEventListener("click", function () {
     var data = xhrJSON("GET", "/api/list" + toQuery({ done: "true" }));
     renderListPayload(data);
   });
 
-  on("btnListQuery", "click", function () {
+  el("btnListQuery").addEventListener("click", function () {
     var q = currentQ();
     if (!q || q.length < 1) return show({ ok: false, error: "Enter a query in Filter q." });
     var data = xhrJSON("GET", "/api/list" + toQuery({ q: q }));
     renderListPayload(data);
   });
 
-  on("btnGet", "click", function () {
+  el("btnGet").addEventListener("click", function () {
     var id = currentId();
     if (!id) return show({ ok: false, error: "Enter an id." });
     var data = xhrJSON("GET", "/api/item/get" + toQuery({ id: id }));
     show(data);
   });
 
-  on("btnAdd", "click", function () {
+  el("btnAdd").addEventListener("click", function () {
     var text = currentText().trim();
     var done = currentDone();
     if (!text) return show({ ok: false, error: "Enter text to add." });
@@ -186,14 +148,16 @@
     show(data);
   });
 
-  on("btnUpdate", "click", function () {
+  el("btnUpdate").addEventListener("click", function () {
     var id = currentId();
     var params = { id: id };
     if (!id) return show({ ok: false, error: "Enter an id." });
 
+    // Optional updates: include only if present
     var text = currentText();
     var hasText = text.trim().length > 0;
     var doneFlag = currentDone();
+    var includeDone = el("doneChk").checked === true || el("doneChk").checked === false; // always true; kept for symmetry
 
     if (!hasText && typeof doneFlag !== "boolean") {
       return show({ ok: false, error: "Provide text and/or done to update." });
@@ -205,24 +169,22 @@
     show(data);
   });
 
-  on("btnToggle", "click", function () {
+  el("btnToggle").addEventListener("click", function () {
     var id = currentId();
     if (!id) return show({ ok: false, error: "Enter an id." });
     var data = xhrJSON("GET", "/api/item/toggle" + toQuery({ id: id }));
     show(data);
   });
 
-  on("btnDelete", "click", function () {
+  el("btnDelete").addEventListener("click", function () {
     var id = currentId();
     if (!id) return show({ ok: false, error: "Enter an id." });
     var data = xhrJSON("GET", "/api/item/delete" + toQuery({ id: id }));
     show(data);
   });
 
-  on("btnClearCompleted", "click", function () {
-    var rawData = xhrJSON("GET", "/api/clear-completed");
-    // format to display nicely in a text format rather than json
-    var data = ("cleared " + (rawData.cleared || 0) + " completed items.");
+  el("btnClearCompleted").addEventListener("click", function () {
+    var data = xhrJSON("GET", "/api/clear-completed");
     show(data);
   });
 
