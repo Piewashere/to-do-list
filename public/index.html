@@ -18,6 +18,11 @@
     <div class="flex-1 flex overflow-hidden min-h-0">
       <!-- Left column: fixed width; scrolls independently -->
       <nav class="w-90 shrink-0 border-r border-black-100 border-r-2 bg-gray-200 p-4 overflow-y-auto">
+        <div p-2>
+          <label class="text-xl font-semibold tracking-wide text-gray-700 py-3 px-2 mb-3">
+            Tools
+          </label>
+        </div>
         <div class="grid grid-cols-2 gap-2">
             <!-- <button id="btnHealth" class="px-3 py-2 rounded bg-blue-700 text-white cursor-pointer">
               Health Check
@@ -31,21 +36,20 @@
           </div>
       <!-- Inputs -->
         <section class="space-y-2 mt-4">
-          <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-600">Inputs</h2>
-          <label for="textInp" class="text-sm text-gray-700 mt-2">Text</label>
-          <input
+        <!--Don't need some of these inputs anymore-->
+          <!-- <input
             id="textInp"
             type="text"
             placeholder="Buy milk"
             class="w-full rounded border border-gray-300 p-2 text-sm"
-          />
+          /> -->
 
-          <div class="flex items-center gap-2">
+          <!-- <div class="flex items-center gap-2">
             <input id="doneChk" type="checkbox" class="h-4 w-4" />
             <label for="doneChk" class="text-sm text-gray-700">Done</label>
-          </div>
+          </div> -->
           
-          <label for="idInp" class="text-sm text-gray-700">Item Number</label>
+          <label for="idInp" class="text-sm text-gray-700">Item ID</label>
           <input
             id="idInp"
             type="number"
@@ -54,65 +58,17 @@
             placeholder="123"
             class="w-full rounded border border-gray-300 p-2 text-sm"
           />
-
-          <label for="qInp" class="text-sm text-gray-700 mt-2">Query</label>
-          <input
-            id="qInp"
-            type="text"
-            placeholder="milk"
-            class="w-full rounded border border-gray-300 p-2 text-sm"
-          />
-          <button
-              id="btnListQuery"
-              class="px-3 py-2 rounded border border-blue-700 text-blue-700 bg-white"
-            >
-              Search
-            </button>
-        </section>
-      <div class="grid grid-cols-3 gap-2 mt-2 p-2">
-            <button
-              id="btnListOpen"
-              class="px-3 py-2 rounded border border-blue-700 text-blue-700 bg-white"
-            >
-              List Incomplete
-            </button>
-            <button
-              id="btnListDone"
-              class="px-3 py-2 rounded border border-blue-700 text-blue-700 bg-white"
-            >
-              List Done
-            </button>
-          </div>
-      <section class="space-y- mt-6">
-          <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</h2>
-          <div class="grid grid-cols-2 gap-2">
+          <div>
             <button
               id="btnGet"
               class="px-3 py-2 rounded border border-blue-700 text-blue-700 bg-white"
             >
-              Get Item
+              Get Item By ID
             </button>
-            <button
-              id="btnAdd"
-              class="px-3 py-2 rounded border border-blue-700 text-blue-700 bg-white"
-              title="Uses text + done"
-            >
-              Add Item
-            </button>
-            <button
-              id="btnUpdate"
-              class="px-3 py-2 rounded border border-blue-700 text-blue-700 bg-white"
-              title="Uses id + text and/or done"
-            >
-              Update Item
-            </button>
-            <button
-              id="btnDelete"
-              class="px-3 py-2 rounded border border-red-700 text-red-700 bg-white"
-              title="Uses id"
-            >
-              Delete Item
-            </button>
+            </div>
+        </section>
+      <section class="space-y- mt-6">
+          <div class="grid grid-cols-1 gap-2">
              <section class="space-y-2 mt-6">
           <h2 class="text-xs font-semibold uppercase tracking-wide text-gray-600">Bulk</h2>
           <button
@@ -121,11 +77,34 @@
           >
             Clear Completed Items
           </button>
+          <button
+              id="btnListOpen"
+              class="w-full px-3 py-2 rounded border border-blue-700 text-blue-700 bg-white"
+            >
+              List Incomplete
+            </button>
+            <button
+              id="btnListDone"
+              class="w-full px-3 py-2 rounded border border-blue-700 text-blue-700 bg-white"
+            >
+              List Done
+            </button>
         </section>
           </div>
         </section>
       </nav>
       <main class="flex-1 p-4 overflow-y-auto bg-blue-200 min-h-0">
+        <div class="p-2">
+          <label for="qInp" class="text-sm text-gray-700 mt-2">Search</label>
+          <input
+            id="searchInp"
+            type="text"
+            placeholder="milk"
+            class="w-full rounded border border-gray-300 p-2 text-sm"
+          />
+          </div>
+          <div class="py-1">
+        </div>
         <pre
           id="out"
           class="m-0 rounded border border-gray-300 bg-white p-3 font-mono text-sm break-words"

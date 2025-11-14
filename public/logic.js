@@ -354,11 +354,27 @@
   function on(id, type, fn) {
     var node = el(id);
     if (!node) {
-      // Useful for debugging in the console but harmless in production.
       console.warn("Missing element for wiring:", id);
       return;
     }
     node.addEventListener(type, fn);
+  }
+
+  // live search on input
+  var searchInp = el("searchInp");
+  if (searchInp) {
+    searchInp.addEventListener("input", function () {
+      var q = searchInp.value.trim();
+      if (q.length === 0) {
+        // empty query: show all
+        var all = xhrJSON("GET", "/api/list");
+        renderListPayload(all);
+      } else {
+        // query as you type
+        var results = xhrJSON("GET", "/api/list" + toQuery({ q: q }));
+        renderListPayload(results);
+      }
+    });
   }
 
   on("btnHealth", "click", function () {
@@ -372,6 +388,7 @@
   });
 
   on("btnListAll", "click", function () {
+    searchInp.value = "";
     var data = xhrJSON("GET", "/api/list");
     renderListPayload(data);
   });
@@ -395,9 +412,16 @@
 
   on("btnGet", "click", function () {
     var id = currentId();
-    if (!id) return show({ ok: false, error: "Enter an id." });
+    // show a blank screen
+    if (!id) return renderListPayload({ items: [] });
     var data = xhrJSON("GET", "/api/item/get" + toQuery({ id: id }));
-    show(data);
+    if (data && data.item) {
+      renderListPayload({ items: [data.item] });
+    } else if (data && data.ok !== false) {
+      renderListPayload({ items: [data] });
+    } else {
+      show(data);
+    }
   });
 
   on("btnAdd", "click", function () {
