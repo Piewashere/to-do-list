@@ -89,17 +89,36 @@
   }
 
   // --------------- optional rendering helpers ---------------
-  function renderListPayload(payload) {
-    if (!payload || payload.ok === false) return show(payload);
-    var items = payload.items;
-    if (!Array.isArray(items)) return show(payload);
+  function renderListPayload(payload, openEditId) {
+    var container = el("out");
+    if (!container) return;
 
-    function pick(it, keys, fallback) {
-      for (var i = 0; i < keys.length; i++) {
-        if (keys[i] in it && it[keys[i]] != null) return it[keys[i]];
+    // error / fallback
+    if (!payload || payload.ok === false) {
+      try {
+        container.textContent = JSON.stringify(payload, null, 2);
+      } catch (e) {
+        container.textContent = String(payload);
       }
-      return fallback;
+      return;
     }
+
+    var items = payload.items;
+    if (!Array.isArray(items)) {
+      container.textContent = JSON.stringify(payload, null, 2);
+      return;
+    }
+
+    // clear
+    container.innerHTML = "";
+
+    // header
+    var hdr = document.createElement("div");
+    hdr.className = "mb-2 font-semibold";
+    hdr.textContent = "Items: " + items.length;
+    container.appendChild(hdr);
+
+    // helper to format dates
     function fmtDate(v) {
       if (!v && v !== 0) return "";
       var d = new Date(v);
@@ -107,25 +126,228 @@
       return String(v);
     }
 
-    var lines = items.map(function (it) {
-      var id = pick(it, ["id", "itemId"], "?");
-      var name = pick(it, ["text", "name", "title"], "");
-      var done = !!pick(it, ["done", "isDone", "completed"], false);
-      var created = pick(it, ["createdAt", "created_at", "created", "createdAtMs"], "");
-      var updated = pick(it, ["updatedAt", "updated_at", "updated", "modifiedAt"], "");
-      var createdStr = fmtDate(created);
-      var updatedStr = fmtDate(updated);
-      var mark = done ? "[x]" : "[ ]";
-      var parts = [];
-      parts.push(mark + " #" + id + "  " + name);
-      var meta = [];
-      if (createdStr) meta.push("created: " + createdStr);
-      if (updatedStr) meta.push("updated: " + updatedStr);
-      if (meta.length) parts.push("    " + meta.join(" | "));
-      return parts.join("\n");
-    });
+    // creates DOM node for an item and returns it; autoEdit will open the editor immediately
+    // isNew: true when node is a locally-created (not-yet-server) item
+    function createItemNode(it, autoEdit, isNew) {
+      // store id in dataset so handlers always read the current id
+      var initialId = it.id || it.itemId || it.itemID || ("temp-" + Math.random().toString(36).slice(2, 9));
+      var name = it.text || it.name || it.title || "";
+      var done = !!(it.done || it.completed);
+      var created = it.createdAt || it.created_at || it.created || "";
+      var updated = it.updatedAt || it.updated_at || it.modifiedAt || "";
 
-    out.textContent = "Items: " + items.length + "\n\n" + lines.join("\n\n");
+      var itemEl = document.createElement("div");
+      itemEl.className = "p-2 mb-2 bg-white rounded flex items-start gap-3";
+      itemEl.dataset.id = initialId;
+      if (isNew) itemEl.dataset.new = "1";
+
+      var chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.checked = done;
+      chk.className = "h-4 w-4 mt-1";
+      chk.title = "Toggle done";
+      chk.addEventListener("change", function () {
+        chk.disabled = true;
+        var idNow = itemEl.dataset.id;
+        xhrJSON("GET", "/api/item/toggle" + toQuery({ id: idNow }));
+        var refreshed = xhrJSON("GET", "/api/list");
+        renderListPayload(refreshed);
+        chk.disabled = false;
+      });
+      itemEl.appendChild(chk);
+
+      var info = document.createElement("div");
+      info.style.flex = "1";
+
+      var titleRow = document.createElement("div");
+      titleRow.className = "flex items-center gap-2";
+
+      var titleText = document.createElement("div");
+      titleText.className = "font-medium";
+      titleText.textContent = name + "  #" + initialId;
+
+      var nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = name;
+      nameInput.className = "rounded border border-gray-300 p-1 text-sm hidden";
+      nameInput.style.minWidth = "200px";
+
+      var editBtn = document.createElement("button");
+      editBtn.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="inline h-4 w-4" style="vertical-align:middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M3 21l6.75-1.5L21 8.25 16.5 3.75 3 17.25V21z"/></svg>';
+      editBtn.setAttribute("title", "Edit");
+      editBtn.setAttribute("aria-label", "Edit item name");
+      editBtn.setAttribute("data-action", "edit");
+      editBtn.className = "px-2 py-1 border border-blue-600 text-blue-600 rounded text-sm";
+
+      var saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save";
+      saveBtn.className = "px-2 py-1 border border-green-600 text-green-600 rounded text-sm hidden";
+
+      var cancelBtn = document.createElement("button");
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.className = "px-2 py-1 border border-gray-400 text-gray-700 rounded text-sm hidden";
+
+      editBtn.addEventListener("click", function () {
+        titleText.classList.add("hidden");
+        nameInput.classList.remove("hidden");
+        editBtn.classList.add("hidden");
+        saveBtn.classList.remove("hidden");
+        cancelBtn.classList.remove("hidden");
+        nameInput.focus();
+        nameInput.selectionStart = nameInput.selectionEnd = nameInput.value.length;
+      });
+
+      cancelBtn.addEventListener("click", function () {
+        // if this was a new, unsaved item cancel should remove the node entirely
+        if (itemEl.dataset.new) {
+          itemEl.remove();
+          return;
+        }
+        nameInput.value = titleText.textContent.replace(/\s+#.*$/, "");
+        titleText.classList.remove("hidden");
+        nameInput.classList.add("hidden");
+        editBtn.classList.remove("hidden");
+        saveBtn.classList.add("hidden");
+        cancelBtn.classList.add("hidden");
+      });
+
+      saveBtn.addEventListener("click", function () {
+        var newName = nameInput.value.trim();
+        if (newName.length === 0) {
+          alert("Name cannot be empty.");
+          nameInput.focus();
+          return;
+        }
+        saveBtn.disabled = true;
+        nameInput.disabled = true;
+
+        var idNow = itemEl.dataset.id;
+        // If this node is a locally-created item (not yet on server) -> call add
+        if (itemEl.dataset.new) {
+          var res = xhrJSON("GET", "/api/item/add" + toQuery({ text: newName }));
+          if (!res || res.ok === false) {
+            alert("Create failed: " + (res && (res.error || res.message) ? (res.error || res.message) : JSON.stringify(res)));
+            saveBtn.disabled = false;
+            nameInput.disabled = false;
+            return;
+          }
+          // server should return new id / item; try to extract it
+          var newId = null;
+          if (res.item && typeof res.item === "object") {
+            newId = res.item.id || res.item.itemId || res.item.itemID;
+          }
+          if (!newId) newId = res.id || res.itemId || res.itemID;
+          if (!newId) {
+            // fallback: re-fetch list and replace whole view
+            var fresh = xhrJSON("GET", "/api/list");
+            renderListPayload(fresh);
+            return;
+          }
+          // update node to reflect server id and persisted state
+          itemEl.dataset.id = newId;
+          delete itemEl.dataset.new;
+          titleText.textContent = newName + "  #" + newId;
+          nameInput.value = newName;
+          titleText.classList.remove("hidden");
+          nameInput.classList.add("hidden");
+          editBtn.classList.remove("hidden");
+          saveBtn.classList.add("hidden");
+          cancelBtn.classList.add("hidden");
+          saveBtn.disabled = false;
+          nameInput.disabled = false;
+          return;
+        }
+
+        // otherwise this is an update of an existing item
+        var upd = xhrJSON("GET", "/api/item/update" + toQuery({ id: idNow, text: newName }));
+        if (upd && upd.ok === false) {
+          alert("Update failed: " + (upd.error || JSON.stringify(upd)));
+          saveBtn.disabled = false;
+          nameInput.disabled = false;
+          return;
+        }
+
+        // update the UI in-place (no full re-render)
+        titleText.textContent = newName + "  #" + idNow;
+        nameInput.value = newName;
+        titleText.classList.remove("hidden");
+        nameInput.classList.add("hidden");
+        editBtn.classList.remove("hidden");
+        saveBtn.classList.add("hidden");
+        cancelBtn.classList.add("hidden");
+        saveBtn.disabled = false;
+        nameInput.disabled = false;
+      });
+
+      titleRow.appendChild(titleText);
+      titleRow.appendChild(nameInput);
+      titleRow.appendChild(editBtn);
+      titleRow.appendChild(saveBtn);
+      titleRow.appendChild(cancelBtn);
+      info.appendChild(titleRow);
+
+      var meta = document.createElement("div");
+      meta.className = "text-xs text-gray-600 mt-1";
+      var parts = [];
+      var cstr = fmtDate(created);
+      var ustr = fmtDate(updated);
+      if (cstr) parts.push("created: " + cstr);
+      if (ustr) parts.push("updated: " + ustr);
+      meta.textContent = parts.join(" | ");
+      info.appendChild(meta);
+
+      itemEl.appendChild(info);
+
+      var del = document.createElement("button");
+      del.textContent = "Delete";
+      del.className = "px-2 py-1 border border-red-600 text-red-600 rounded";
+      del.addEventListener("click", function () {
+        del.disabled = true;
+        xhrJSON("GET", "/api/item/delete" + toQuery({ id: itemEl.dataset.id }));
+        var refreshed = xhrJSON("GET", "/api/list");
+        renderListPayload(refreshed);
+      });
+      itemEl.appendChild(del);
+
+      // if requested, open the editor immediately
+      if (autoEdit) {
+        // run after a brief tick so node can be inserted first
+        setTimeout(function () {
+          editBtn.click();
+        }, 0);
+      }
+
+      return itemEl;
+    }
+
+    // + New Item button (inserted after header)
+    var addRow = document.createElement("div");
+    addRow.className = "mb-3";
+    var addBtn = document.createElement("button");
+    addBtn.textContent = "+ New Item";
+    addBtn.className = "px-3 py-1 rounded border border-blue-700 text-blue-700 bg-white";
+    addBtn.title = "Create a new item and edit its name";
+    addBtn.addEventListener("click", function () {
+      addBtn.disabled = true;
+      // create a local (unsaved) item node and open its editor immediately.
+      // Save will call /api/item/add to persist.
+      var temp = { id: "temp-" + Math.random().toString(36).slice(2, 9), text: "" };
+      var node = createItemNode(temp, true, true);
+      container.insertBefore(node, addRow.nextSibling);
+      node.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      addBtn.disabled = false;
+    });
+    addRow.appendChild(addBtn);
+    container.appendChild(addRow);
+
+    // render existing items
+    items.forEach(function (it) {
+      var id = it.id || it.itemId || it.itemID || "?";
+      var auto = openEditId && String(openEditId) === String(id);
+      var node = createItemNode(it, auto, false);
+      container.appendChild(node);
+    });
   }
 
   // --------------- wire buttons ---------------
@@ -166,7 +388,7 @@
 
   on("btnListQuery", "click", function () {
     var q = currentQ();
-    if (!q || q.length < 1) return show({ ok: false, error: "Enter a query in Filter q." });
+    if (!q || q.length < 1) return show({ ok: false, error: "Enter a query in Filter" });
     var data = xhrJSON("GET", "/api/list" + toQuery({ q: q }));
     renderListPayload(data);
   });
