@@ -1,33 +1,12 @@
 {
-  "nextId": 39,
+  "nextId": 66,
   "items": [
     {
-      "id": 33,
-      "text": "Feed dog",
+      "id": 65,
+      "text": "Clean dishes",
       "done": false,
-      "createdAt": "2025-11-14T06:02:21.166Z",
-      "updatedAt": "2025-11-14T15:28:33.271Z"
-    },
-    {
-      "id": 35,
-      "text": "Wash clothes",
-      "done": false,
-      "createdAt": "2025-11-14T06:03:02.930Z",
-      "updatedAt": "2025-11-14T15:28:37.443Z"
-    },
-    {
-      "id": 36,
-      "text": "Wash Dishes",
-      "done": false,
-      "createdAt": "2025-11-14T15:28:41.208Z",
-      "updatedAt": "2025-11-14T15:28:41.208Z"
-    },
-    {
-      "id": 37,
-      "text": "Call Mom",
-      "done": false,
-      "createdAt": "2025-11-14T15:33:06.741Z",
-      "updatedAt": "2025-11-14T15:33:06.741Z"
+      "createdAt": "2025-11-21T14:56:45.189Z",
+      "updatedAt": "2025-11-21T14:56:45.189Z"
     }
   ]
 }

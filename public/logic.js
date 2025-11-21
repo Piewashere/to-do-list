@@ -232,30 +232,9 @@
             nameInput.disabled = false;
             return;
           }
-          // server should return new id / item; try to extract it
-          var newId = null;
-          if (res.item && typeof res.item === "object") {
-            newId = res.item.id || res.item.itemId || res.item.itemID;
-          }
-          if (!newId) newId = res.id || res.itemId || res.itemID;
-          if (!newId) {
-            // fallback: re-fetch list and replace whole view
-            var fresh = xhrJSON("GET", "/api/list");
-            renderListPayload(fresh);
-            return;
-          }
-          // update node to reflect server id and persisted state
-          itemEl.dataset.id = newId;
-          delete itemEl.dataset.new;
-          titleText.textContent = newName + "  #" + newId;
-          nameInput.value = newName;
-          titleText.classList.remove("hidden");
-          nameInput.classList.add("hidden");
-          editBtn.classList.remove("hidden");
-          saveBtn.classList.add("hidden");
-          cancelBtn.classList.add("hidden");
-          saveBtn.disabled = false;
-          nameInput.disabled = false;
+          // fetch updated list and re-render (removes bounce automatically)
+          var fresh = xhrJSON("GET", "/api/list");
+          renderListPayload(fresh);
           return;
         }
 
@@ -326,7 +305,11 @@
     addRow.className = "mb-3";
     var addBtn = document.createElement("button");
     addBtn.textContent = "+ New Item";
-    addBtn.className = "px-3 py-1 rounded border border-blue-700 text-blue-700 bg-white";
+    if (items.length >= 1){
+      addBtn.className = "px-3 py-1 rounded border border-blue-700 text-blue-700 bg-white";
+    } else {
+      addBtn.className = "px-3 py-1 rounded border border-blue-700 text-blue-700 bg-white animate-bounce";
+    }
     addBtn.title = "Create a new item and edit its name";
     addBtn.addEventListener("click", function () {
       addBtn.disabled = true;
@@ -360,6 +343,15 @@
     node.addEventListener(type, fn);
   }
 
+  // toggle sidebar visibility
+  var toggleNavBtn = el("toggleNavBtn");
+  var sideNav = el("sideNav");
+  if (toggleNavBtn && sideNav) {
+    toggleNavBtn.addEventListener("click", function () {
+      sideNav.classList.toggle("hidden");
+    });
+  }
+
   // live search on input
   var searchInp = el("searchInp");
   if (searchInp) {
@@ -379,7 +371,21 @@
 
   on("btnHealth", "click", function () {
     var data = xhrJSON("GET", "/api/health");
-    show(data);
+    var list = xhrJSON("GET", "/api/list");
+    var container = el("out");
+    if (data.status == '200') {
+      var healthMsg = document.createElement("div");
+      healthMsg.className = "mb-3 p-2 bg-green-100 border border-black-400 text-black-700 rounded";
+      healthMsg.textContent = "Health Status 200! Good to go.";
+    } else {
+      var healthMsg = document.createElement("div");
+      healthMsg.className = "mb-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded";
+      healthMsg.textContent = "Error- Health Status " + data.status;
+    }
+    renderListPayload(list);
+    container.insertBefore(healthMsg, container.firstChild);
+    return;
+    //show(data);
   });
 
   on("btnStats", "click", function () {
@@ -412,15 +418,38 @@
 
   on("btnGet", "click", function () {
     var id = currentId();
-    // show a blank screen
-    if (!id) return renderListPayload({ items: [] });
+    // if blank, show error and current list
+    if (!id) {
+      var list = xhrJSON("GET", "/api/list");
+      renderListPayload(list);
+      // prepend error message to output
+      var container = el("out");
+      var errMsg = document.createElement("div");
+      errMsg.className = "mb-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded";
+      errMsg.textContent = "Error: Enter an ID to search.";
+      container.insertBefore(errMsg, container.firstChild);
+      return;
+    }
+    
     var data = xhrJSON("GET", "/api/item/get" + toQuery({ id: id }));
-    if (data && data.item) {
+    
+    // if item not found or error, show error and current list
+    if (!data || data.ok === false || (!data.item && !data.id)) {
+      var list = xhrJSON("GET", "/api/list");
+      renderListPayload(list);
+      var container = el("out");
+      var errMsg = document.createElement("div");
+      errMsg.className = "mb-3 p-2 bg-red-100 border border-red-400 text-red-700 rounded";
+      errMsg.textContent = "Error: No item found with ID " + id + ".";
+      container.insertBefore(errMsg, container.firstChild);
+      return;
+    }
+    
+    // item found, display it
+    if (data.item) {
       renderListPayload({ items: [data.item] });
-    } else if (data && data.ok !== false) {
+    } else if (data.id) {
       renderListPayload({ items: [data] });
-    } else {
-      show(data);
     }
   });
 
@@ -429,7 +458,14 @@
     var done = currentDone();
     if (!text) return show({ ok: false, error: "Enter text to add." });
     var data = xhrJSON("GET", "/api/item/add" + toQuery({ text: text, done: done }));
-    show(data);
+    console.log("Add response:", data);
+    
+    // fetch updated list and render it (which recalculates items.length)
+    var refreshed = xhrJSON("GET", "/api/list");
+    console.log("Refreshed list:", refreshed);
+    console.log("Items count:", refreshed.items ? refreshed.items.length : 0);
+    
+    renderListPayload(refreshed);
   });
 
   on("btnUpdate", "click", function () {
@@ -468,8 +504,8 @@
   on("btnClearCompleted", "click", function () {
     var rawData = xhrJSON("GET", "/api/clear-completed");
     // format to display nicely in a text format rather than json
-    var data = ("cleared " + (rawData.cleared || 0) + " completed items.");
-    show(data);
+    var data = xhrJSON("GET", "/api/list");
+    renderListPayload(data);
   });
 
   // --------------- boot (synchronous) ---------------
