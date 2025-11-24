@@ -1,12 +1,19 @@
 {
-  "nextId": 66,
+  "nextId": 75,
   "items": [
     {
-      "id": 65,
-      "text": "Clean dishes",
+      "id": 73,
+      "text": "wash dishes",
       "done": false,
-      "createdAt": "2025-11-21T14:56:45.189Z",
-      "updatedAt": "2025-11-21T14:56:45.189Z"
+      "createdAt": "2025-11-22T15:49:33.388Z",
+      "updatedAt": "2025-11-22T15:49:33.388Z"
+    },
+    {
+      "id": 74,
+      "text": "cats",
+      "done": false,
+      "createdAt": "2025-11-22T15:49:38.218Z",
+      "updatedAt": "2025-11-22T15:49:38.218Z"
     }
   ]
 }
