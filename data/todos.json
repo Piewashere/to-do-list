@@ -1,5 +1,5 @@
 {
-  "nextId": 75,
+  "nextId": 77,
   "items": [
     {
       "id": 73,
@@ -9,11 +9,18 @@
       "updatedAt": "2025-11-22T15:49:33.388Z"
     },
     {
-      "id": 74,
-      "text": "cats",
+      "id": 75,
+      "text": "feed cats",
+      "done": true,
+      "createdAt": "2025-11-24T15:40:54.458Z",
+      "updatedAt": "2025-11-24T15:41:01.906Z"
+    },
+    {
+      "id": 76,
+      "text": "do laundry",
       "done": false,
-      "createdAt": "2025-11-22T15:49:38.218Z",
-      "updatedAt": "2025-11-22T15:49:38.218Z"
+      "createdAt": "2025-11-24T15:41:00.193Z",
+      "updatedAt": "2025-11-24T15:41:00.193Z"
     }
   ]
 }

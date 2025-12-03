@@ -10,15 +10,15 @@
   </head>
   <body class="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
     <!-- Header -->
-    <header class="flex-none border-b bg-white sticky top-0 z-20 border-b-2">
+    <header class="flex-none bg-white sticky top-0 z-20 border-b-2">
       <div class="px-4 py-3 flex items-center justify-between">
         <h1 class="text-xl font-semibold">To Do</h1>
         <button
           id="toggleNavBtn"
           class="px-3 py-1 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100"
-          title="Toggle sidebar"
+          title="Toggle Toolbar"
         >
-          ☰
+          TOOLS
         </button>
       </div>
     </header>
@@ -26,7 +26,7 @@
       <!-- Left column: fixed width; scrolls independently -->
       <nav id="sideNav" class="w-90 shrink-0 border-r border-black-100 border-r-2 bg-gray-200 p-4 overflow-y-auto">
         <div p-2>
-          <label class="text-xl font-semibold tracking-wide text-gray-700 py-3 px-2 mb-3">
+          <label class="text-xl font-semibold tracking-wide text-gray-700 py-3 px-2 mb-3 ">
             Tools
           </label>
         </div>
@@ -102,12 +102,12 @@
       </nav>
       <main class="flex-1 p-4 overflow-y-auto bg-blue-200 min-h-0">
         <div class="p-2">
-          <label for="qInp" class="text-sm text-gray-700 mt-2">Search</label>
+          <label for="qInp" class="text-sm text-gray-700 mt-2 px-1">Search</label>
           <input
             id="searchInp"
             type="text"
             placeholder="milk"
-            class="w-full rounded border border-gray-300 p-2 text-sm"
+            class="w-64 rounded border border-gray-300 p-2 text-sm"
           />
           </div>
           <div class="py-1">
